@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>معتز للتجارة MT</title>
+    <title>متجر الأدوات الكهربائية - متصل بـ Firebase</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -123,14 +123,15 @@
         // ==============================================
         // ============= إعدادات Firebase ===============
         // ==============================================
-        // هام: استبدل هذا الكائن بالكامل بالكائن الذي نسخته من مشروعك في الخطوة 2
+        // تم التحديث باستخدام الإعدادات الخاصة بك
         const firebaseConfig = {
-            apiKey: "AIzaSy...YOUR_API_KEY", // <-- استبدل
-            authDomain: "your-project-id.firebaseapp.com", // <-- استبدل
-            projectId: "your-project-id", // <-- استبدل
-            storageBucket: "your-project-id.appspot.com", // <-- استبدل
-            messagingSenderId: "1234567890", // <-- استبدل
-            appId: "1:1234567890:web:abcdef123456" // <-- استبدل
+            apiKey: "AIzaSyBQcPgnAEysUDENyQuXtMNHCiLpS2-eDJ8",
+            authDomain: "my-tools-store.firebaseapp.com",
+            projectId: "my-tools-store",
+            storageBucket: "my-tools-store.appspot.com",
+            messagingSenderId: "1036449226290",
+            appId: "1:1036449226290:web:0e6f6ed0c1fe0f2061262b",
+            measurementId: "G-175H6H1ESJ"
         };
 
         // تهيئة Firebase
@@ -181,7 +182,8 @@
                     const snapshot = await productsCollection.orderBy('name').get();
                     
                     if (snapshot.empty) {
-                        productGrid.innerHTML = '<p class="col-span-full text-center">لا توجد منتجات لعرضها حالياً. قم بإضافتها من لوحة التحكم.</p>';
+                        productGrid.innerHTML = '<p class="col-span-full text-center py-10">لا توجد منتجات لعرضها حالياً. قم بإضافتها من لوحة التحكم.</p>';
+                        loadingMessage.style.display = 'none';
                         return;
                     }
                     
@@ -227,10 +229,9 @@
                 }
             };
             
-            // ** تحديث: التعامل مع نموذج الإضافة والتعديل
             const handleFormSubmit = async (e) => {
                 e.preventDefault();
-                submitBtn.disabled = true; // منع الضغطات المتكررة
+                submitBtn.disabled = true;
                 const id = productIdInput.value;
                 const productData = {
                     name: productNameInput.value,
@@ -240,15 +241,15 @@
                 };
 
                 try {
-                    if (id) { // تعديل منتج موجود
+                    if (id) {
                         await productsCollection.doc(id).update(productData);
                         alert('تم تحديث المنتج بنجاح!');
-                    } else { // إضافة منتج جديد
+                    } else {
                         await productsCollection.add(productData);
                         alert('تمت إضافة المنتج بنجاح!');
                     }
                     resetForm();
-                    renderProducts(); // إعادة تحميل البيانات من Firestore
+                    renderProducts();
                 } catch (error) {
                     console.error("خطأ في حفظ المنتج: ", error);
                     alert('حدث خطأ أثناء حفظ المنتج.');
@@ -257,7 +258,6 @@
                 }
             };
 
-            // ** تحديث: ملء النموذج للتعديل
             const populateFormForEdit = async (id) => {
                 try {
                     const doc = await productsCollection.doc(id).get();
@@ -292,13 +292,12 @@
                 submitBtn.disabled = false;
             };
 
-            // ** تحديث: حذف المنتج من Firestore
             const deleteProduct = async (id) => {
                 if (confirm('هل أنت متأكد أنك تريد حذف هذا المنتج؟ هذا الإجراء لا يمكن التراجع عنه.')) {
                     try {
                         await productsCollection.doc(id).delete();
                         alert('تم حذف المنتج بنجاح.');
-                        renderProducts(); // إعادة تحميل البيانات
+                        renderProducts();
                     } catch (error) {
                         console.error("خطأ في حذف المنتج: ", error);
                         alert('حدث خطأ أثناء حذف المنتج.');
@@ -311,9 +310,6 @@
                 window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
             };
 
-            // ==================================================
-            // =================== ربط الأحداث ===================
-            // ==================================================
             document.getElementById('admin-login-btn').addEventListener('click', () => {
                 userView.classList.add('hidden');
                 adminView.classList.remove('hidden');
@@ -352,10 +348,7 @@
                 if (whatsappBtn) openWhatsApp(whatsappBtn.dataset.productName, whatsappBtn.dataset.productPrice);
             });
 
-            // ==================================================
-            // =================== التشغيل الأولي ===================
-            // ==================================================
-            renderProducts(); // ** تحديث: تحميل المنتجات عند بدء تشغيل الصفحة
+            renderProducts();
         });
     </script>
 </body>
