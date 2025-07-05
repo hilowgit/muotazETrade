@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معتز للتجارة MT</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type='number'] { -moz-appearance: textfield; }
+        .transition-all { transition: all 0.3s ease-in-out; }
+        .product-card:hover .product-image { transform: scale(1.05); }
+        /* لإظهار رسالة التحميل في المنتصف */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #fBBF24;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <div id="app" class="container mx-auto p-4">
+        <div id="user-view">
+            <header class="flex justify-between items-center mb-8 pb-4 border-b-2 border-yellow-500">
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-white"><i class="fas fa-tools text-yellow-500"></i> متجر المحترف</h1>
+                <button id="admin-login-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-all"><i class="fas fa-user-shield"></i> لوحة التحكم</button>
+            </header>
+            <main id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <div id="loading-message" class="col-span-full flex flex-col items-center justify-center h-64">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-lg">جاري تحميل المنتجات...</p>
+                </div>
+            </main>
+        </div>
+
+        <div id="admin-view" class="hidden">
+            <div id="admin-login-section" class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 mt-20">
+                <h2 class="text-3xl font-bold text-center mb-6"><i class="fas fa-lock text-yellow-500"></i> دخول المدير</h2>
+                <form id="admin-login-form">
+                    <div class="mb-6">
+                        <label for="password" class="block mb-2 text-sm font-medium">كلمة المرور</label>
+                        <input type="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    </div>
+                    <button type="submit" class="w-full text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition-all">تسجيل الدخول</button>
+                    <p id="login-error" class="text-red-500 text-center mt-4 hidden">كلمة المرور غير صحيحة!</p>
+                </form>
+            </div>
+            
+            <div id="admin-dashboard" class="hidden">
+                 <header class="flex justify-between items-center mb-8 pb-4 border-b-2 border-yellow-500">
+                    <h1 class="text-4xl font-bold"><i class="fas fa-cogs text-yellow-500"></i> لوحة التحكم</h1>
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+                </header>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl mb-8">
+                    <h2 class="text-2xl font-bold mb-4" id="form-title"><i class="fas fa-plus-circle text-green-500"></i> إضافة منتج جديد</h2>
+                    <form id="product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="hidden" id="product-id">
+                        <div>
+                            <label for="product-name" class="block mb-2 font-medium">اسم المنتج</label>
+                            <input type="text" id="product-name" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5" required>
+                        </div>
+                        <div>
+                            <label for="product-price" class="block mb-2 font-medium">السعر (ل.س)</label>
+                            <input type="number" id="product-price" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="product-desc" class="block mb-2 font-medium">وصف المنتج</label>
+                            <textarea id="product-desc" rows="3" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5" required></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="product-image" class="block mb-2 font-medium">رابط صورة المنتج</label>
+                            <input type="url" id="product-image" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-2.5" required>
+                        </div>
+                        <div class="md:col-span-2 flex items-center gap-4">
+                            <button type="submit" id="submit-btn" class="flex-grow text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg px-5 py-3 text-center transition-all"><i class="fas fa-check"></i> حفظ المنتج</button>
+                            <button type="button" id="cancel-edit-btn" class="flex-grow text-white bg-gray-500 hover:bg-gray-600 font-medium rounded-lg px-5 py-3 text-center transition-all hidden"><i class="fas fa-times"></i> إلغاء التعديل</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl overflow-x-auto">
+                    <h2 class="text-2xl font-bold mb-4"><i class="fas fa-list-ul text-yellow-500"></i> المنتجات الحالية</h2>
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">الصورة</th>
+                                <th scope="col" class="px-6 py-3">المنتج</th>
+                                <th scope="col" class="px-6 py-3">السعر</th>
+                                <th scope="col" class="px-6 py-3 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-product-list">
+                           </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // ==============================================
+        // ============= إعدادات Firebase ===============
+        // ==============================================
+        // هام: استبدل هذا الكائن بالكامل بالكائن الذي نسخته من مشروعك في الخطوة 2
+        const firebaseConfig = {
+            apiKey: "AIzaSy...YOUR_API_KEY", // <-- استبدل
+            authDomain: "your-project-id.firebaseapp.com", // <-- استبدل
+            projectId: "your-project-id", // <-- استبدل
+            storageBucket: "your-project-id.appspot.com", // <-- استبدل
+            messagingSenderId: "1234567890", // <-- استبدل
+            appId: "1:1234567890:web:abcdef123456" // <-- استبدل
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const productsCollection = db.collection('products');
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // ==================================================
+            // =================== الإعدادات العامة ===================
+            // ==================================================
+            const whatsappNumber = '963912345678';
+            const adminPassword = 'admin';
+
+            // ==================================================
+            // =================== عناصر الواجهة ===================
+            // ==================================================
+            const userView = document.getElementById('user-view');
+            const adminView = document.getElementById('admin-view');
+            const adminLoginSection = document.getElementById('admin-login-section');
+            const adminDashboard = document.getElementById('admin-dashboard');
+            const productGrid = document.getElementById('product-grid');
+            const loadingMessage = document.getElementById('loading-message');
+            const adminProductList = document.getElementById('admin-product-list');
+            const productForm = document.getElementById('product-form');
+            const formTitle = document.getElementById('form-title');
+            const submitBtn = document.getElementById('submit-btn');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            const productIdInput = document.getElementById('product-id');
+            const productNameInput = document.getElementById('product-name');
+            const productPriceInput = document.getElementById('product-price');
+            const productDescInput = document.getElementById('product-desc');
+            const productImageInput = document.getElementById('product-image');
+
+            // ==================================================
+            // =================== الوظائف الرئيسية ===================
+            // ==================================================
+            const formatCurrency = (number) => new Intl.NumberFormat('ar-SY').format(number) + ' ل.س';
+
+            // ** تحديث: جلب وعرض المنتجات من Firestore
+            const renderProducts = async () => {
+                loadingMessage.style.display = 'flex'; // إظهار رسالة التحميل
+                productGrid.innerHTML = ''; // إفراغ الشبكة
+                adminProductList.innerHTML = ''; // إفراغ الجدول
+                
+                try {
+                    const snapshot = await productsCollection.orderBy('name').get();
+                    
+                    if (snapshot.empty) {
+                        productGrid.innerHTML = '<p class="col-span-full text-center">لا توجد منتجات لعرضها حالياً. قم بإضافتها من لوحة التحكم.</p>';
+                        return;
+                    }
+                    
+                    snapshot.forEach(doc => {
+                        const product = { id: doc.id, ...doc.data() };
+                        
+                        // عرض في واجهة المستخدم
+                        const card = document.createElement('div');
+                        card.className = 'product-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-all';
+                        card.innerHTML = `
+                            <div class="overflow-hidden h-56">
+                                <img src="${product.image}" alt="${product.name}" class="product-image w-full h-full object-cover transition-transform duration-300" onerror="this.onerror=null;this.src='https://placehold.co/400x400/cccccc/ffffff?text=خطأ+بالصورة';">
+                            </div>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold mb-2 truncate">${product.name}</h3>
+                                <p class="text-gray-600 dark:text-gray-400 h-16 overflow-hidden">${product.description}</p>
+                                <div class="mt-4 text-2xl font-black text-yellow-500">${formatCurrency(product.price)}</div>
+                                <button class="whatsapp-btn mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2" data-product-name="${product.name}" data-product-price="${formatCurrency(product.price)}">
+                                    <i class="fab fa-whatsapp text-xl"></i> اطلب الآن
+                                </button>
+                            </div>`;
+                        productGrid.appendChild(card);
+
+                        // عرض في جدول الإدارة
+                        const row = document.createElement('tr');
+                        row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
+                        row.innerHTML = `
+                            <td class="p-4"><img src="${product.image}" class="w-16 h-16 object-cover rounded-md" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/100x100/cccccc/ffffff?text=خطأ';"></td>
+                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${product.name}</th>
+                            <td class="px-6 py-4">${formatCurrency(product.price)}</td>
+                            <td class="px-6 py-4 text-center">
+                                <button class="edit-btn font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4" data-id="${product.id}"><i class="fas fa-edit"></i> تعديل</button>
+                                <button class="delete-btn font-medium text-red-600 dark:text-red-500 hover:underline" data-id="${product.id}"><i class="fas fa-trash"></i> حذف</button>
+                            </td>`;
+                        adminProductList.appendChild(row);
+                    });
+
+                } catch (error) {
+                    console.error("خطأ في جلب المنتجات: ", error);
+                    productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">حدث خطأ أثناء تحميل المنتجات. تأكد من صحة إعدادات Firebase.</p>';
+                } finally {
+                    loadingMessage.style.display = 'none'; // إخفاء رسالة التحميل
+                }
+            };
+            
+            // ** تحديث: التعامل مع نموذج الإضافة والتعديل
+            const handleFormSubmit = async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true; // منع الضغطات المتكررة
+                const id = productIdInput.value;
+                const productData = {
+                    name: productNameInput.value,
+                    price: parseFloat(productPriceInput.value),
+                    description: productDescInput.value,
+                    image: productImageInput.value,
+                };
+
+                try {
+                    if (id) { // تعديل منتج موجود
+                        await productsCollection.doc(id).update(productData);
+                        alert('تم تحديث المنتج بنجاح!');
+                    } else { // إضافة منتج جديد
+                        await productsCollection.add(productData);
+                        alert('تمت إضافة المنتج بنجاح!');
+                    }
+                    resetForm();
+                    renderProducts(); // إعادة تحميل البيانات من Firestore
+                } catch (error) {
+                    console.error("خطأ في حفظ المنتج: ", error);
+                    alert('حدث خطأ أثناء حفظ المنتج.');
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            };
+
+            // ** تحديث: ملء النموذج للتعديل
+            const populateFormForEdit = async (id) => {
+                try {
+                    const doc = await productsCollection.doc(id).get();
+                    if (doc.exists) {
+                        const product = doc.data();
+                        productIdInput.value = id;
+                        productNameInput.value = product.name;
+                        productPriceInput.value = product.price;
+                        productDescInput.value = product.description;
+                        productImageInput.value = product.image;
+
+                        formTitle.innerHTML = `<i class="fas fa-edit text-blue-500"></i> تعديل المنتج`;
+                        submitBtn.innerHTML = `<i class="fas fa-save"></i> حفظ التعديلات`;
+                        submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                        submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                        cancelEditBtn.classList.remove('hidden');
+                        window.scrollTo(0, 0);
+                    }
+                } catch (error) {
+                    console.error("خطأ في جلب المنتج للتعديل: ", error);
+                }
+            };
+            
+            const resetForm = () => {
+                productForm.reset();
+                productIdInput.value = '';
+                formTitle.innerHTML = `<i class="fas fa-plus-circle text-green-500"></i> إضافة منتج جديد`;
+                submitBtn.innerHTML = `<i class="fas fa-check"></i> حفظ المنتج`;
+                submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                cancelEditBtn.classList.add('hidden');
+                submitBtn.disabled = false;
+            };
+
+            // ** تحديث: حذف المنتج من Firestore
+            const deleteProduct = async (id) => {
+                if (confirm('هل أنت متأكد أنك تريد حذف هذا المنتج؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+                    try {
+                        await productsCollection.doc(id).delete();
+                        alert('تم حذف المنتج بنجاح.');
+                        renderProducts(); // إعادة تحميل البيانات
+                    } catch (error) {
+                        console.error("خطأ في حذف المنتج: ", error);
+                        alert('حدث خطأ أثناء حذف المنتج.');
+                    }
+                }
+            };
+            
+            const openWhatsApp = (name, price) => {
+                const message = encodeURIComponent(`مرحباً، أود طلب المنتج التالي:\n\nالمنتج: ${name}\nالسعر: ${price}\n\nشكراً لكم.`);
+                window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
+            };
+
+            // ==================================================
+            // =================== ربط الأحداث ===================
+            // ==================================================
+            document.getElementById('admin-login-btn').addEventListener('click', () => {
+                userView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+            });
+            
+            document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (document.getElementById('password').value === adminPassword) {
+                    adminLoginSection.classList.add('hidden');
+                    adminDashboard.classList.remove('hidden');
+                    document.getElementById('login-error').classList.add('hidden');
+                    document.getElementById('password').value = '';
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                adminDashboard.classList.add('hidden');
+                adminLoginSection.classList.remove('hidden');
+                userView.classList.remove('hidden');
+                adminView.classList.add('hidden');
+            });
+            
+            productForm.addEventListener('submit', handleFormSubmit);
+            cancelEditBtn.addEventListener('click', resetForm);
+
+            document.body.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-btn');
+                if (editBtn) populateFormForEdit(editBtn.dataset.id);
+
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) deleteProduct(deleteBtn.dataset.id);
+
+                const whatsappBtn = e.target.closest('.whatsapp-btn');
+                if (whatsappBtn) openWhatsApp(whatsappBtn.dataset.productName, whatsappBtn.dataset.productPrice);
+            });
+
+            // ==================================================
+            // =================== التشغيل الأولي ===================
+            // ==================================================
+            renderProducts(); // ** تحديث: تحميل المنتجات عند بدء تشغيل الصفحة
+        });
+    </script>
+</body>
+</html>
